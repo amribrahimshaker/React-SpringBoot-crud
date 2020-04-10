@@ -2,34 +2,38 @@ import React, { Component } from "react";
 import { getCustomers, deleteCustomer } from "./../services/customerService";
 import { Link } from "react-router-dom";
 import _ from "lodash";
+import auth from "../services/authService";
 
 class Customers extends Component {
   state = { data: [], searchQuery: "" };
 
   columns = [
-    {
-      path: "id",
-      label: "Id / Edit",
-      content: (customer) => (
-        <Link to={`/customer/${customer.id}`}>{customer.id}</Link>
-      ),
-    },
     { path: "firstName", label: "FirstName" },
     { path: "lastName", label: "LastName" },
     { path: "email", label: "Email" },
-    {
-      key: "delete",
-      label: "Delete",
-      content: (customer) => (
-        <button
-          onClick={() => this.handleDelete(customer)}
-          className="btn btn-danger btn-sm"
-        >
-          Delete
-        </button>
-      ),
-    },
   ];
+
+  editColumn = {
+    path: "id",
+    label: "Id / Edit",
+    content: (customer) => (
+      <Link to={`/customer/${customer.id}`}>{customer.id}</Link>
+    ),
+  };
+
+  deleteColumn = {
+    key: "delete",
+    label: "Delete",
+    content: (customer) => (
+      <button
+        onClick={() => this.handleDelete(customer)}
+        className="btn btn-danger btn-sm"
+      >
+        Delete
+      </button>
+    ),
+  };
+
   renderCell = (item, column) => {
     if (column.content) return column.content(item);
 
@@ -41,11 +45,18 @@ class Customers extends Component {
   };
 
   async componentDidMount() {
+    const user = auth.getCurrentUser();
+
+    if (user) {
+      this.columns.push(this.deleteColumn);
+      this.columns.unshift(this.editColumn);
+    }
+
     const { data } = await getCustomers();
-    // console.log("data", data); //data (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+    // console.log("data", data.customerList); //data (6) [{…}, {…}, {…}, {…}, {…}, {…}] ---> customerList: Array(13)
     //data[0]: {id: 1, firstName: "Allen", lastName: "Adams", email: "allen@luv2code.com"}
 
-    this.setState({ data });
+    this.setState({ data: data.customerList });
   }
 
   handleDelete = async (customer) => {
@@ -68,8 +79,11 @@ class Customers extends Component {
   };
 
   render() {
+    // console.log(this.props); //{history: {…}, location: {…}, match: {…}, staticContext: undefined, user: null}
     const { length: count } = this.state.data;
     const { data: allCustomers, searchQuery } = this.state;
+
+    const { user } = this.props;
 
     let filtered = allCustomers;
     if (searchQuery) {
@@ -82,13 +96,16 @@ class Customers extends Component {
       <div className="row">
         <div className="col">
           <h1>Customers</h1>
-          <Link
-            to="/customer/new"
-            className="btn btn-primary"
-            style={{ marginBottom: 20 }}
-          >
-            New Customer
-          </Link>
+
+          {user && (
+            <Link
+              to="/customer/new"
+              className="btn btn-primary"
+              style={{ marginBottom: 20 }}
+            >
+              New Customer
+            </Link>
+          )}
           <p>Showing {count} customers in the database.</p>
           <div>
             <input

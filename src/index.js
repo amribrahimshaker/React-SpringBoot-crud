@@ -6,13 +6,13 @@ import * as serviceWorker from "./serviceWorker";
 
 import "./index.css";
 import "bootstrap/dist/css/bootstrap.css";
+import AppLogin from "./AppLogin";
 
 ReactDOM.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>,
+  <BrowserRouter>
+    <App />
+    {/* <AppLogin></AppLogin> */}
+  </BrowserRouter>,
   document.getElementById("root")
 );
 
